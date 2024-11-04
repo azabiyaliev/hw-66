@@ -24,6 +24,7 @@ const Home = () => {
       const mealsFromList = mealsList;
 
       const mealsFromAPI = Object.keys(mealsFromList).map((mealKey) => {
+
         return {
           ...mealsFromList[mealKey],
           id: mealKey,
@@ -48,12 +49,12 @@ const Home = () => {
     }
   };
 
+  const totalCalories = meals.reduce((acc, calorie) => acc + Number(calorie.calories), 0);
+
   return (
     <div>
       <div className="d-flex align-items-center justify-content-between  mb-5">
-        <span className="fs-4">Total calories:<b>
-
-        </b></span>
+        <span className="fs-4">Total calories:<b> {totalCalories} </b></span>
         <Button
           type="button"
           sx={{ width: "10%"}}
@@ -66,8 +67,8 @@ const Home = () => {
       </div>
       <Grid container spacing={2}>
         {meals.map((meal) => (
-          <Grid sx={{}} xs={12} key={meal.id}>
-            <Card sx={{boxShadow: 10, minWidth: 300}}>
+          <Grid xs={12} key={meal.id}>
+            <Card sx={{boxShadow: 10, minWidth: 300 }}>
               <CardContent sx={{alignSelf: "center"}}>
                 <Typography
                   sx={{fontSize: 30, ms: 0, ps: 0,}}
