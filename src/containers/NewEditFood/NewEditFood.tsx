@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { IMeal, IMealForm } from '../../types';
 import axiosAPI from '../../axiosAPI.ts';
 import { useNavigate, useParams } from 'react-router-dom';
+import ButtonSpinner from '../../components/UI/ButtonSpinner/ButtonSpinner.tsx';
+import { toast } from 'react-toastify';
 
 const categories = [
   {title: "Breakfast", id: "breakfast" },
@@ -18,15 +20,17 @@ const initialForm = {
   calories: 0
 };
 
+
 const NewEditFood = () => {
 
   const [form, setForm] = useState<IMealForm>({...initialForm});
   const navigate = useNavigate();
   const params = useParams<{ idMeal: string }>();
-  console.log(params);
+  const [loading, setLoading] = useState(false);
 
-    const fetchMeal = useCallback(async (id: string) => {
+  const fetchMeal = useCallback(async (id: string) => {
       try {
+        setLoading(true);
         const response: { data: IMeal } = await axiosAPI<IMeal>(
           `meal/${id}.json`,
         );
@@ -35,6 +39,8 @@ const NewEditFood = () => {
         }
       } catch (e) {
         console.log(e);
+      } finally {
+        setLoading(false);
       }
     }, []);
 
@@ -56,86 +62,90 @@ const NewEditFood = () => {
   const submitForm = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
+      setLoading(true);
       if (params.idMeal) {
         await axiosAPI.put(`meal/${params.idMeal}.json`, { ...form });
-        setForm(initialForm);
+        toast.success('Meal successfully updated');
       } else {
         await axiosAPI.post("meal.json", { ...form });
+        toast.success('Meal successfully added');
         navigate("/");
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
 
   return (
-    <form onSubmit={submitForm}>
-      <h1 style={{textAlign: "left", paddingTop: "30px"}}>
-        Add / edit meal
-      </h1>
-      <Box
-        sx={{
-          py: 3,
-          display: "grid",
-          gap: 2,
-          flexWrap: "wrap",
-          width: "100%",
-        }}
-      >
-        <Box sx={{maxWidth: 200}}>
-          <FormControl fullWidth>
-            <InputLabel variant="standard" htmlFor="uncontrolled-native">
-              Choose page
-            </InputLabel>
-            <NativeSelect
-              required
-              name="meal"
-              value={form.meal}
-              aria-selected={true}
+        <form onSubmit={submitForm}>
+          <h1 style={{textAlign: "left", paddingTop: "30px"}}>
+            Add / edit meal
+          </h1>
+          <Box
+            sx={{
+              py: 3,
+              display: "grid",
+              gap: 2,
+              flexWrap: "wrap",
+              width: "100%",
+            }}
+          >
+            <Box sx={{maxWidth: 200}}>
+              <FormControl fullWidth>
+                <InputLabel variant="standard" htmlFor="uncontrolled-native">
+                  Choose page
+                </InputLabel>
+                <NativeSelect
+                  required
+                  name="meal"
+                  value={form.meal}
+                  aria-selected={true}
+                  onChange={onChangeField}
+                >
+                  {categories.map((category) => (
+                    <option key={category.title} value={category.title}>{category.title}</option>
+                  ))}
+                </NativeSelect>
+              </FormControl>
+            </Box>
+            <TextField
+              sx={{me: "auto", width: "50%"}}
+              name="description"
+              id="outlined-multiline-static"
+              label="Meal description"
+              value={form.description}
+              multiline
+              rows={4}
               onChange={onChangeField}
-            >
-              {categories.map((category) => (
-                <option key={category.title} value={category.title}>{category.title}</option>
-              ))}
-            </NativeSelect>
-          </FormControl>
-        </Box>
-        <TextField
-          sx={{me: "auto", width: "50%"}}
-          name="description"
-          id="outlined-multiline-static"
-          label="Meal description"
-          value={form.description}
-          multiline
-          rows={4}
-          onChange={onChangeField}
-        />
-        <TextField
-          sx={{me: "auto", maxWidth: 200 }}
-          type="number"
-          id="outlined-basic"
-          label="Calories"
-          name="calories"
-          variant="outlined"
-          value={form.calories}
-          onChange={onChangeField}
-          InputProps={{
-            inputProps: {
-              min: 0,
-            }
-          }}
-        />
-        <Button
-          type="submit"
-          sx={{me: "auto", width: "5%"}}
-          color="inherit"
-          variant="outlined"
-        >
-          Save
-        </Button>
-      </Box>
-    </form>
+            />
+            <TextField
+              sx={{me: "auto", maxWidth: 200}}
+              type="number"
+              id="outlined-basic"
+              label="Calories"
+              name="calories"
+              variant="outlined"
+              value={form.calories}
+              onChange={onChangeField}
+              InputProps={{
+                inputProps: {
+                  min: 0,
+                }
+              }}
+            />
+            <Button
+              disabled={loading}
+              type="submit"
+              sx={{me: "auto", width: "8%"}}
+              color="inherit"
+              variant="outlined"
+            > <span className="me-2">Save</span> {loading ? <ButtonSpinner/> : null}
+            </Button>
+          </Box>
+        </form>
   );
 };
 
