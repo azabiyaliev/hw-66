@@ -13,17 +13,23 @@ const Home = () => {
   const fetchData = useCallback(async () => {
 
     try {
-      const response = await axiosAPI.get<IMealAPI>('meal.json');
+      const response: {data: IMealAPI | null } = await axiosAPI.get<IMealAPI>('meal.json');
+      const mealsList = response.data;
 
-      if (response.data) {
-        const mealsFromAPI = Object.keys(response.data).map((mealKey) => {
-          return {
-            ...response.data[mealKey],
-            id: mealKey,
-          };
-        });
-        setMeals(mealsFromAPI);
+      if (mealsList === null) {
+        setMeals([]);
+        return;
       }
+
+      const mealsFromList = mealsList;
+
+      const mealsFromAPI = Object.keys(mealsFromList).map((mealKey) => {
+        return {
+          ...mealsFromList[mealKey],
+          id: mealKey,
+        };
+      });
+      setMeals(mealsFromAPI);
     } catch (e) {
       console.error(e);
     }
@@ -33,7 +39,14 @@ const Home = () => {
     void fetchData();
   }, [fetchData]);
 
-  console.log(meals);
+  const deleteMeal = async (id:string) => {
+    try {
+      await axiosAPI.delete(`meal/${id}.json`);
+      await fetchData();
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   return (
     <div>
@@ -82,6 +95,7 @@ const Home = () => {
                 </Button>
                 <Button
                   size="small"
+                  onClick={() => deleteMeal(meal.id)}
                 >
                   Delete
                 </Button>
